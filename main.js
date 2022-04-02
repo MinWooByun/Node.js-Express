@@ -15,7 +15,7 @@ app.get("/", (request, response) => {
   });
 });
 
-app.get("/page/:pageId", (request, respones) => {
+app.get("/page/:pageId", (request, response) => {
   fs.readdir("./data", function (error, filelist) {
     fs.readFile(`data/${request.params.pageId}`, "utf8", function (err, description) {
       const title = request.params.pageId;
@@ -37,7 +37,47 @@ app.get("/page/:pageId", (request, respones) => {
         </form>
         `
       );
-      respones.send(html);
+      response.send(html);
+    });
+  });
+});
+
+app.get("/create", (request, response) => {
+  fs.readdir("./data", function (error, filelist) {
+    const title = "WEB - create";
+    const list = template.list(filelist);
+    const html = template.HTML(
+      title,
+      list,
+      `
+      <form action="/create_process" method="post">
+        <p><input type="text" name="title" placeholder="title"></p>
+        <p>
+          <textarea name="description" placeholder="description"></textarea>
+        </p>
+        <p>
+          <input type="submit">
+        </p>
+      </form>
+    `,
+      ""
+    );
+    response.send(html);
+  });
+});
+
+// create_process 말고 create form에서 주소를 create만 주고 post 방식이기 때문에 create만 적어줘도 된다.
+// 이러면 get 방식이면 위에 코드가 실행되고 post 방식이면 아래의 코드가 실행된다.
+app.post("/create_process", (request, response) => {
+  let body = "";
+  request.on("data", function (data) {
+    body = body + data;
+  });
+  request.on("end", function () {
+    const title = new URLSearchParams(body).get("title");
+    const description = new URLSearchParams(body).get("description");
+    fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+      response.redirect(302, `/page/${title}`);
     });
   });
 });
@@ -61,42 +101,7 @@ app.listen(port, () => {
 //   if (pathname === "/") {
 //     } else {
 //   } else if (pathname === "/create") {
-//     fs.readdir("./data", function (error, filelist) {
-//       var title = "WEB - create";
-//       var list = template.list(filelist);
-//       var html = template.HTML(
-//         title,
-//         list,
-//         `
-//           <form action="/create_process" method="post">
-//             <p><input type="text" name="title" placeholder="title"></p>
-//             <p>
-//               <textarea name="description" placeholder="description"></textarea>
-//             </p>
-//             <p>
-//               <input type="submit">
-//             </p>
-//           </form>
-//         `,
-//         ""
-//       );
-//       response.writeHead(200);
-//       response.end(html);
-//     });
 //   } else if (pathname === "/create_process") {
-//     var body = "";
-//     request.on("data", function (data) {
-//       body = body + data;
-//     });
-//     request.on("end", function () {
-//       var post = qs.parse(body);
-//       var title = post.title;
-//       var description = post.description;
-//       fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-//         response.writeHead(302, { Location: `/?id=${title}` });
-//         response.end();
-//       });
-//     });
 //   } else if (pathname === "/update") {
 //     fs.readdir("./data", function (error, filelist) {
 //       var filteredId = path.parse(queryData.id).base;
