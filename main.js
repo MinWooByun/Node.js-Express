@@ -31,7 +31,7 @@ app.get("/page/:pageId", (request, response) => {
         `
         <a href="/create">create</a>
         <a href="/update/${sanitizedTitle}">update</a>
-        <form action="delete_process" method="post">
+        <form action="/delete_process" method="post">
           <input type="hidden" name="id" value="${sanitizedTitle}">
           <input type="submit" value="delete">
         </form>
@@ -77,7 +77,7 @@ app.post("/create_process", (request, response) => {
     const title = new URLSearchParams(body).get("title");
     const description = new URLSearchParams(body).get("description");
     fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-      response.redirect(302, `/page/${title}`);
+      response.redirect(`/page/${title}`);
     });
   });
 });
@@ -105,8 +105,7 @@ app.get("/update/:pageId", (request, response) => {
         `,
         `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
       );
-      response.writeHead(200);
-      response.end(html);
+      response.send(html);
     });
   });
 });
@@ -122,9 +121,21 @@ app.post("/update_process", (request, response) => {
     const description = new URLSearchParams(body).get("description");
     fs.rename(`data/${id}`, `data/${title}`, function (error) {
       fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-        response.writeHead(302, { Location: `/page/${title}` });
-        response.end();
+        response.redirect(`/page/${title}`);
       });
+    });
+  });
+});
+
+app.post("/delete_process", (request, response) => {
+  let body = "";
+  request.on("data", function (data) {
+    body = body + data;
+  });
+  request.on("end", function () {
+    const id = new URLSearchParams(body).get("id");
+    fs.unlink(`data/${id}`, function (error) {
+      response.redirect(`/`);
     });
   });
 });
@@ -152,19 +163,6 @@ app.listen(port, () => {
 //   } else if (pathname === "/update") {
 //   } else if (pathname === "/update_process") {
 //   } else if (pathname === "/delete_process") {
-//     var body = "";
-//     request.on("data", function (data) {
-//       body = body + data;
-//     });
-//     request.on("end", function () {
-//       var post = qs.parse(body);
-//       var id = post.id;
-//       var filteredId = path.parse(id).base;
-//       fs.unlink(`data/${filteredId}`, function (error) {
-//         response.writeHead(302, { Location: `/` });
-//         response.end();
-//       });
-//     });
 //   } else {
 //     response.writeHead(404);
 //     response.end("Not found");
