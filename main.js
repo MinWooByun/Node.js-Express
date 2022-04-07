@@ -4,6 +4,11 @@ const port = 3000;
 const fs = require("fs");
 const template = require("./lib/template.js");
 const sanitizeHtml = require("sanitize-html");
+const bodyParser = require("body-parser");
+const compression = require("compression");
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
 app.get("/", (request, response) => {
   fs.readdir("./data", function (error, filelist) {
@@ -69,16 +74,11 @@ app.get("/create", (request, response) => {
 // create_process 말고 create form에서 주소를 create만 주고 post 방식이기 때문에 create만 적어줘도 된다.
 // 이러면 get 방식이면 위에 코드가 실행되고 post 방식이면 아래의 코드가 실행된다.
 app.post("/create_process", (request, response) => {
-  let body = "";
-  request.on("data", function (data) {
-    body = body + data;
-  });
-  request.on("end", function () {
-    const title = new URLSearchParams(body).get("title");
-    const description = new URLSearchParams(body).get("description");
-    fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-      response.redirect(`/page/${title}`);
-    });
+  const post = request.body;
+  const title = post.title;
+  const description = post.description;
+  fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+    response.redirect(`/page/${title}`);
   });
 });
 
@@ -111,61 +111,25 @@ app.get("/update/:pageId", (request, response) => {
 });
 
 app.post("/update_process", (request, response) => {
-  let body = "";
-  request.on("data", function (data) {
-    body = body + data;
-  });
-  request.on("end", function () {
-    const id = new URLSearchParams(body).get("id");
-    const title = new URLSearchParams(body).get("title");
-    const description = new URLSearchParams(body).get("description");
-    fs.rename(`data/${id}`, `data/${title}`, function (error) {
-      fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-        response.redirect(`/page/${title}`);
-      });
+  const post = request.body;
+  const id = post.id;
+  const title = post.title;
+  const description = post.description;
+  fs.rename(`data/${id}`, `data/${title}`, function (error) {
+    fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+      response.redirect(`/page/${title}`);
     });
   });
 });
 
 app.post("/delete_process", (request, response) => {
-  let body = "";
-  request.on("data", function (data) {
-    body = body + data;
-  });
-  request.on("end", function () {
-    const id = new URLSearchParams(body).get("id");
-    fs.unlink(`data/${id}`, function (error) {
-      response.redirect(`/`);
-    });
+  const post = request.body;
+  const id = post.id;
+  fs.unlink(`data/${id}`, function (error) {
+    response.redirect(`/`);
   });
 });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
-// var http = require("http");
-// var fs = require("fs");
-// var url = require("url");
-// var qs = require("querystring");
-// var template = require("./lib/template.js");
-// var path = require("path");
-// var sanitizeHtml = require("sanitize-html");
-
-// var app = http.createServer(function (request, response) {
-//   var _url = request.url;
-//   var queryData = url.parse(_url, true).query;
-//   var pathname = url.parse(_url, true).pathname;
-//   if (pathname === "/") {
-//     } else {
-//   } else if (pathname === "/create") {
-//   } else if (pathname === "/create_process") {
-//   } else if (pathname === "/update") {
-//   } else if (pathname === "/update_process") {
-//   } else if (pathname === "/delete_process") {
-//   } else {
-//     response.writeHead(404);
-//     response.end("Not found");
-//   }
-// });
-// app.listen(3000);
