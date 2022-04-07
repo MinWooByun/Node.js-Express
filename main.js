@@ -7,6 +7,8 @@ const sanitizeHtml = require("sanitize-html");
 const bodyParser = require("body-parser");
 const compression = require("compression");
 
+// public 디렉터리 안에서 static 파일을 찾겠다는 뜻이다.
+app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 // 미들웨어 만들기 get 방식중에 모두에 해당됨.
@@ -21,7 +23,12 @@ app.get("/", (request, response) => {
   const title = "Welcome";
   const description = "Hello, Node.js";
   const list = template.list(request.list);
-  const html = template.HTML(title, list, `<h2>${title}</h2>${description}`, `<a href="/create">create</a>`);
+  const html = template.HTML(
+    title,
+    list,
+    `<h2>${title}</h2>${description}<img src="/images/hello.jpg" style="width:300px; display:block; margin-top:10px">`,
+    `<a href="/create">create</a>`
+  );
   response.send(html);
 });
 
