@@ -32,28 +32,32 @@ app.get("/", (request, response) => {
   response.send(html);
 });
 
-app.get("/page/:pageId", (request, response) => {
+app.get("/page/:pageId", (request, response, next) => {
   fs.readFile(`data/${request.params.pageId}`, "utf8", function (err, description) {
-    const title = request.params.pageId;
-    const sanitizedTitle = sanitizeHtml(title);
-    const sanitizedDescription = sanitizeHtml(description, {
-      allowedTags: ["h1"],
-    });
-    const list = template.list(request.list);
-    const html = template.HTML(
-      sanitizedTitle,
-      list,
-      `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-      `
-        <a href="/create">create</a>
-        <a href="/update/${sanitizedTitle}">update</a>
-        <form action="/delete_process" method="post">
-          <input type="hidden" name="id" value="${sanitizedTitle}">
-          <input type="submit" value="delete">
-        </form>
+    if (err) {
+      next(err);
+    } else {
+      const title = request.params.pageId;
+      const sanitizedTitle = sanitizeHtml(title);
+      const sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: ["h1"],
+      });
+      const list = template.list(request.list);
+      const html = template.HTML(
+        sanitizedTitle,
+        list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
         `
-    );
-    response.send(html);
+          <a href="/create">create</a>
+          <a href="/update/${sanitizedTitle}">update</a>
+          <form action="/delete_process" method="post">
+            <input type="hidden" name="id" value="${sanitizedTitle}">
+            <input type="submit" value="delete">
+          </form>
+          `
+      );
+      response.send(html);
+    }
   });
 });
 
@@ -134,6 +138,15 @@ app.post("/delete_process", (request, response) => {
   fs.unlink(`data/${id}`, function (error) {
     response.redirect(`/`);
   });
+});
+
+app.use((request, response, next) => {
+  response.status(404).send("Sorry can't find that!");
+});
+
+app.use((err, request, response, next) => {
+  console.error(err.stack);
+  response.status(500).send("Something broke!");
 });
 
 app.listen(port, () => {
