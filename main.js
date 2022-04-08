@@ -2,12 +2,13 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const fs = require("fs");
-const template = require("./lib/template.js");
 const bodyParser = require("body-parser");
 const compression = require("compression");
 const indexRouter = require("./routes/index");
 const topicRouter = require("./routes/topic");
+const helmet = require("helmet");
 
+app.use(helmet());
 // public 디렉터리 안에서 static 파일을 찾겠다는 뜻이다.
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }));
