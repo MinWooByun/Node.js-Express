@@ -4,6 +4,7 @@ const router = express.Router();
 const fs = require("fs");
 const sanitizeHtml = require("sanitize-html");
 const template = require("../lib/template.js");
+const db = require("../lib/db");
 
 router.get("/create", (request, response) => {
   const title = "WEB - create";
@@ -84,22 +85,20 @@ router.post("/delete_process", (request, response) => {
   });
 });
 
-router.get("/:pageId", (request, response, next) => {
-  fs.readFile(`data/${request.params.pageId}`, "utf8", function (err, description) {
-    if (err) {
-      next(err);
-    } else {
-      const title = request.params.pageId;
-      const sanitizedTitle = sanitizeHtml(title);
-      const sanitizedDescription = sanitizeHtml(description, {
-        allowedTags: ["h1"],
-      });
-      const list = template.list(request.list);
-      const html = template.HTML(
-        sanitizedTitle,
-        list,
-        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-        `
+router.get("/:pageId", (request, response) => {
+  db.query("SELECT * FROM topic WHERE topic.title=?", [request.params.pageId], (err, topic) => {
+    if (err) throw err;
+    const title = topic[0].title;
+    const sanitizedTitle = sanitizeHtml(title);
+    const sanitizedDescription = sanitizeHtml(topic[0].description, {
+      allowedTags: ["h1"],
+    });
+    const list = template.list(request.list);
+    const html = template.HTML(
+      sanitizedTitle,
+      list,
+      `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+      `
         <a href="/topic/create">create</a>
         <a href="/topic/update/${sanitizedTitle}">update</a>
         <form action="/topic/delete_process" method="post">
@@ -107,9 +106,8 @@ router.get("/:pageId", (request, response, next) => {
             <input type="submit" value="delete">
         </form>
         `
-      );
-      response.send(html);
-    }
+    );
+    response.send(html);
   });
 });
 
