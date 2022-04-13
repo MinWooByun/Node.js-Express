@@ -34,7 +34,7 @@ router.post("/create_process", (request, response) => {
   const post = request.body;
   const title = post.title;
   const description = post.description;
-  fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+  db.query("INSERT INTO topic(title, description, created) VALUES(?, ?, now())", [title, description], (err, result) => {
     response.redirect(`/topic/${title}`);
   });
 });
