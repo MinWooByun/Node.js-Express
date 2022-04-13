@@ -7,6 +7,7 @@ const compression = require("compression");
 const indexRouter = require("./routes/index");
 const topicRouter = require("./routes/topic");
 const helmet = require("helmet");
+const db = require("./lib/db");
 
 app.use(helmet());
 // public 디렉터리 안에서 static 파일을 찾겠다는 뜻이다.
@@ -15,8 +16,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 // 미들웨어 만들기 get 방식중에 모두에 해당됨.
 app.get("*", (request, response, next) => {
-  fs.readdir("./data", function (error, filelist) {
-    request.list = filelist;
+  db.query("SELECT * FROM topic", (err, topics) => {
+    request.list = topics;
     next();
   });
 });
