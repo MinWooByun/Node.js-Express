@@ -41,7 +41,8 @@ router.post("/create_process", (request, response) => {
 
 router.get("/update/:pageId", (request, response) => {
   const filteredId = request.params.pageId;
-  fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
+  db.query("SELECT * FROM topic WHERE topic.title=?", [filteredId], (err, topic) => {
+    if (err) throw err;
     const title = filteredId;
     const list = template.list(request.list);
     const html = template.HTML(
@@ -49,10 +50,10 @@ router.get("/update/:pageId", (request, response) => {
       list,
       `
         <form action="/topic/update_process" method="post">
-        <input type="hidden" name="id" value="${title}">
+        <input type="hidden" name="oldId" value="${title}">
         <p><input type="text" name="title" placeholder="title" value="${title}"></p>
         <p>
-            <textarea name="description" placeholder="description">${description}</textarea>
+            <textarea name="description" placeholder="description">${topic[0].description}</textarea>
         </p>
         <p>
             <input type="submit">
@@ -67,13 +68,11 @@ router.get("/update/:pageId", (request, response) => {
 
 router.post("/update_process", (request, response) => {
   const post = request.body;
-  const id = post.id;
+  const oldId = post.oldId;
   const title = post.title;
   const description = post.description;
-  fs.rename(`data/${id}`, `data/${title}`, function (error) {
-    fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-      response.redirect(`/topic/${title}`);
-    });
+  db.query("UPDATE topic SET title=?, description=? WHERE title=?", [title, description, oldId], (err, result) => {
+    response.redirect(`/topic/${title}`);
   });
 });
 
