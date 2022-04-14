@@ -41,7 +41,7 @@ router.post("/create_process", (request, response) => {
 
 router.get("/update/:pageId", (request, response) => {
   const filteredId = request.params.pageId;
-  db.query("SELECT * FROM topic WHERE topic.title=?", [filteredId], (err, topic) => {
+  db.query("SELECT * FROM topic WHERE title=?", [filteredId], (err, topic) => {
     if (err) throw err;
     const title = filteredId;
     const list = template.list(request.list);
@@ -78,14 +78,14 @@ router.post("/update_process", (request, response) => {
 
 router.post("/delete_process", (request, response) => {
   const post = request.body;
-  const id = post.id;
-  fs.unlink(`data/${id}`, function (error) {
-    response.redirect(`/`);
+  const oldId = post.oldId;
+  db.query("DELETE FROM topic WHERE title=?", [oldId], (err, result) => {
+    response.redirect("/");
   });
 });
 
 router.get("/:pageId", (request, response) => {
-  db.query("SELECT * FROM topic WHERE topic.title=?", [request.params.pageId], (err, topic) => {
+  db.query("SELECT * FROM topic WHERE title=?", [request.params.pageId], (err, topic) => {
     if (err) throw err;
     const title = topic[0].title;
     const sanitizedTitle = sanitizeHtml(title);
@@ -101,7 +101,7 @@ router.get("/:pageId", (request, response) => {
         <a href="/topic/create">create</a>
         <a href="/topic/update/${sanitizedTitle}">update</a>
         <form action="/topic/delete_process" method="post">
-            <input type="hidden" name="id" value="${sanitizedTitle}">
+            <input type="hidden" name="oldId" value="${sanitizedTitle}">
             <input type="submit" value="delete">
         </form>
         `
