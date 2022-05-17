@@ -1,7 +1,6 @@
 // router를 쓰는 이유는 서로 연관되어 있는 route들을 별도의 파일로 빼서 코드를 훨씬 보기 좋기 하기 위해서이다.
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
 const sanitizeHtml = require("sanitize-html");
 const template = require("../lib/template.js");
 const db = require("../lib/db");
